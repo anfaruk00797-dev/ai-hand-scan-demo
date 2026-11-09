@@ -13,12 +13,59 @@ const mime = {
   '.svg': 'image/svg+xml',
 };
 
+// Live events: the AI process POSTs JSON to /api/event, the screen listens on /events (SSE).
+const clients = new Set();
+setInterval(() => { for (const c of clients) c.write(': ping\n\n'); }, 15000).unref();
+
+function broadcast(event) {
+  const line = `data: ${JSON.stringify(event)}\n\n`;
+  for (const c of clients) c.write(line);
+}
+
 const server = http.createServer((req, res) => {
   let pathname;
   try {
     pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   } catch {
     res.writeHead(400).end('Bad request');
+    return;
+  }
+
+  if (pathname === '/events' && req.method === 'GET') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-store',
+      Connection: 'keep-alive',
+    });
+    res.write(': connected\n\n');
+    clients.add(res);
+    req.on('close', () => clients.delete(res));
+    return;
+  }
+
+  if (pathname === '/api/event' && req.method === 'POST') {
+    let body = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 65536) req.destroy();
+    });
+    req.on('end', () => {
+      let event;
+      try {
+        event = JSON.parse(body);
+      } catch {
+        res.writeHead(400).end('Invalid JSON');
+        return;
+      }
+      const events = Array.isArray(event) ? event : [event];
+      if (!events.every((e) => e && typeof e.type === 'string')) {
+        res.writeHead(400).end('Each event needs a "type"');
+        return;
+      }
+      events.forEach(broadcast);
+      res.writeHead(204).end();
+    });
     return;
   }
 
