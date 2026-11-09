@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Hand Scan</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#030506;overflow:hidden;font-family:"Leelawadee UI",system-ui,sans-serif;color:#edffff}button{font:inherit}#screen{width:100%;height:100%;display:grid;place-items:center;outline:none;cursor:pointer}#screen:not([data-state="idle"]){cursor:default}#screen:focus-visible #stage{outline:1px solid #b6faff;outline-offset:-3px}#stage{position:relative;width:min(100vw,177.77778vh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;background:#000}video,#bridge{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#intro,#scan,#result{opacity:0;pointer-events:none}#screen[data-state="intro"] #intro,#screen[data-state="scan"] #scan,#screen[data-state="result"] #result,#screen[data-state="ended"] #result{opacity:1}#bridge{opacity:0;pointer-events:none;transition:opacity .36s cubic-bezier(.22,1,.36,1)}#screen[data-state="preparing"] #bridge{opacity:1}#stage.loop-seam #bridge{opacity:1;transition:opacity .28s linear}#standby{position:absolute;inset:0;pointer-events:none;transition:opacity .45s,transform .65s cubic-bezier(.22,1,.36,1);opacity:1}#screen:not([data-state="idle"]):not([data-state="preparing"]) #standby{opacity:0;transform:translateY(-1.2%)}#screen[data-state="preparing"] .invitation{opacity:0;transform:translate(-50%,8px)}.heading{position:absolute;top:5.6%;left:23%;right:23%;text-align:center}.eyebrow{font-size:1.06cqw;letter-spacing:.15em;color:#8babb7;margin:0 0 .7cqw}.heading h1{font-family:Bahnschrift,"Segoe UI",sans-serif;font-size:4.15cqw;line-height:1.05;font-weight:500;letter-spacing:-.04em;margin:0;text-shadow:0 0 28px #85e8ef18}.heading h1 span{color:#b1f4f6}.heading .tagline{font-size:1.17cqw;font-weight:400;color:#aabec5;margin:.8cqw 0 0;letter-spacing:.02em}.heading:after{content:"";display:block;width:5.2cqw;height:1px;margin:1.1cqw auto 0;background:linear-gradient(90deg,transparent,#94e9f0,transparent)}.panel-label{position:absolute;font-family:"Segoe UI",sans-serif;font-size:.82cqw;letter-spacing:.15em;color:#a1d7e1;font-weight:500}.left{left:6.5%}.right{left:80.3%}.upper{top:20%}.lower{top:49.8%}.invitation{position:absolute;left:50%;bottom:5.6%;width:25%;text-align:center;transform:translateX(-50%);transition:opacity .2s,transform .35s}.invitation .cta{display:inline-flex;align-items:center;justify-content:center;gap:1.1cqw;padding:1.02cqw 1.45cqw;border:1px solid #a2f5ff69;border-radius:999px;background:linear-gradient(135deg,#102c35e8,#08141aee);font-size:1.25cqw;line-height:1.25;box-shadow:inset 0 1px 0 #d5ffff20,0 0 36px #85edf00c;color:#edffff}.cta .arrow{font-size:1.5cqw;color:#8ddfe9}.invitation p{font-size:.88cqw;color:#79939d;margin:.75cqw 0 0;letter-spacing:.035em}.ready{position:absolute;top:5.2%;right:6.3%;display:flex;align-items:center;gap:.45cqw;font-size:.73cqw;letter-spacing:.14em;color:#95b6c0}.ready i{width:.36cqw;height:.36cqw;background:#8ae6dc;border-radius:50%;box-shadow:0 0 9px #8ae6dc60}.chapter{position:absolute;left:6.3%;top:5.2%;color:#6d8d99;font-size:.75cqw;letter-spacing:.12em}.chapter b{color:#b9e5ee;font-weight:500;margin-right:.5cqw}#invitation-depth{position:absolute;top:42%;left:15%;width:70%;text-align:center;pointer-events:none;opacity:0;transform:perspective(900px) scale(var(--caption-scale,1));filter:blur(var(--caption-blur,0px));will-change:transform,opacity;color:#ddffff;text-shadow:0 0 14px #85f3ff35,0 0 40px #69e1ef20}#invitation-depth .rule{display:block;width:4cqw;height:1px;background:#a5f9ff;margin:0 auto 1.4cqw;box-shadow:0 0 8px #74ebff70}#invitation-depth h2{font-size:4.6cqw;font-weight:400;line-height:1.2;letter-spacing:-.035em;margin:0}#invitation-depth p{font-size:1.8cqw;font-weight:400;letter-spacing:.035em;margin:1cqw 0 0;color:#a6d0db}#reset{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);border:1px solid #92dfed77;border-radius:30px;padding:.8cqw 1.8cqw;background:#081c25eb;color:#d5fbff;cursor:pointer;font-size:1.15cqw;display:none}#screen[data-state="ended"] #reset{display:block}#reset:hover{background:#15333e}#reset:focus-visible{outline:2px solid #c6fcff;outline-offset:3px}#message{position:absolute;bottom:2%;left:0;right:0;color:#c6f7ff;text-align:center;pointer-events:none;font-size:1.1cqw;text-shadow:0 2px 6px #000}#message:empty{display:none}@media(prefers-reduced-motion:reduce){#standby,#bridge,.invitation{transition:none}}
+
+/* Make the physical instruction the dominant action in the wrist gap. */
+.invitation{bottom:6.1%;width:44%;isolation:isolate}
+.invitation:before{content:"";position:absolute;z-index:-1;inset:-1.8cqw -3cqw;background:radial-gradient(ellipse,#030c12e8 0%,#030c128f 48%,transparent 75%);pointer-events:none}
+.invitation .cta{gap:1.25cqw;padding:1.05cqw 2.15cqw;border-color:#bdfbffad;background:linear-gradient(135deg,#173d4df5,#091923f5);font-size:2.12cqw;font-weight:600;letter-spacing:.01em;box-shadow:inset 0 1px 0 #e8ffff3d,0 0 32px #83e5f12b,0 5px 22px #0009}
+.cta .arrow{font-size:2.3cqw;color:#b2f7ff;font-weight:400}
+.invitation p{font-size:1.25cqw;font-weight:500;color:#c0d5df;margin:.85cqw 0 0;letter-spacing:.01em;text-shadow:0 1px 8px #000}
+@media(max-width:520px){.invitation{width:53%;bottom:5.2%}.invitation .cta{font-size:2.6cqw;padding:1.2cqw 2.3cqw}.invitation p{font-size:1.55cqw}.cta .arrow{font-size:2.7cqw}}
+
+#scan-curtain{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+
+/* Correct the small generated labels inside the original optical-glass modules. */
+#analysis-ui{position:absolute;inset:0;pointer-events:none;opacity:0;color:#c0f3f4;--ink:#c0f3f4}
+#analysis-ui.complete{--ink:#b3efd5}
+.optical-label{position:absolute;background:#10252ae8;color:var(--ink);font-family:"Segoe UI",sans-serif;letter-spacing:.055em;font-size:.88cqw;line-height:1.35;font-weight:500;white-space:nowrap;text-shadow:0 0 8px #9decf323}
+#phase-value{top:10.95%;right:6.15%;padding:.25cqw .15cqw .2cqw;width:14.9%;text-align:right}
+#phase-note{top:19.4%;right:6.8%;width:13.9%;text-align:center;padding:.25cqw .15cqw}
+.elapsed-correction{top:79.7%;right:6.3%;width:14%;height:12%;text-align:right;padding:.3cqw .1cqw .35cqw;line-height:1.5}
+.elapsed-correction small{display:block;font-size:.7cqw;letter-spacing:.13em;opacity:.75}
+#elapsed-value{display:block;font-size:2cqw;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.015em}
+.progress-correction{top:11.3%;left:5.9%;width:17.1%;height:6.7%;padding:.15cqw .3cqw .2cqw}
+.progress-correction small{font-size:.72cqw;letter-spacing:.08em}
+#progress-value{float:right;font-size:1.2cqw;line-height:1.15;font-variant-numeric:tabular-nums}
+.progress-track{display:block;height:1px;margin-top:.55cqw;background:#99e7ee22}
+#progress-bar{display:block;height:100%;width:0;background:var(--ink);box-shadow:0 0 6px #a7f5ef35}
+.cleanliness-correction{top:79.7%;left:6.3%;width:14%;height:12%;padding:.3cqw .1cqw;line-height:1.5}
+.cleanliness-correction small{display:block;font-size:.7cqw;letter-spacing:.08em}
+#cleanliness-value{display:block;font-size:2cqw;font-variant-numeric:tabular-nums;letter-spacing:.015em}
+.demo-mark{position:absolute;bottom:2.1%;left:35%;right:35%;text-align:center;font-size:.73cqw;letter-spacing:.055em;color:#a1bdc5;opacity:.8}
+#reset{bottom:5.5%;min-height:44px;min-width:120px;padding:10px 22px;font-size:clamp(12px,1.15cqw,18px);backdrop-filter:blur(12px);border-color:#9ccdbf55;background:#091d19e8;color:#d1f4e5}
+@media(prefers-reduced-motion:reduce){#analysis-ui{transition:none}}
+</style>
+</head>
+<body>
+<main id="screen" data-state="idle" tabindex="0" role="button" aria-label="สอดมือเข้าไปดูสิ แตะหน้าจอเพื่อเริ่มสแกน">
+ <div id="stage">
+  <video id="idle" src="media/idle-premium.mp4" autoplay muted loop playsinline preload="auto"></video>
+  <img id="bridge" src="media/final-1-clean.png" alt="">
+  <video id="intro" src="media/intro-premium.mp4" playsinline preload="auto"></video>
+  <video id="scan" src="media/final-3-projected-smooth.mp4" playsinline preload="auto"></video>
+  <video id="result" src="media/final-4-projected-smooth.mp4" playsinline preload="auto"></video>
+  <div id="scan-curtain" aria-hidden="true"></div>
+  <div id="analysis-ui" aria-hidden="true">
+   <div class="optical-label progress-correction"><small>SCAN PROGRESS</small><span id="progress-value">0%</span><span class="progress-track"><i id="progress-bar"></i></span></div>
+   <div class="optical-label cleanliness-correction"><small>CLEANLINESS</small><span id="cleanliness-value">94%</span></div>
+   <div id="phase-value" class="optical-label">PALM ANALYSIS</div>
+   <div id="phase-note" class="optical-label">PALM · SURFACE ANALYSIS</div>
+   <div class="optical-label elapsed-correction"><small>ELAPSED</small><span id="elapsed-value">00:00</span></div>
+   <div class="demo-mark">ตัวอย่างการแสดงผล</div>
+  </div>
+  <div id="standby" aria-hidden="true">
+   <div class="chapter"><b>01</b> / HAND SCAN</div>
+   <div class="ready"><i></i>READY</div>
+   <div class="heading"><p class="eyebrow">สำรวจความสะอาดบนมือคุณ</p><h1>AI <span>Hand Scan</span></h1><p class="tagline">เห็นมือคุณ ในอีกมิติหนึ่ง</p></div>
+   <span class="panel-label left upper">PALM MAP</span><span class="panel-label left lower">SURFACE DATA</span><span class="panel-label right upper">SENSOR FIELD</span><span class="panel-label right lower">LIVE ANALYSIS</span>
+   <div class="invitation"><span class="cta">สอดมือเข้าไปดูสิ <span class="arrow">↗</span></span><p>แตะหน้าจอเพื่อเริ่มสแกน</p></div>
+  </div>
+  <div id="invitation-depth" aria-hidden="true"><span class="rule"></span><h2>ลองเช็คดู</h2><p>ถ้าอยากรู้ว่าสะอาด</p></div>
+  <div id="message" role="status"></div>
+  <button id="reset" type="button">เริ่มใหม่ ↗</button>
+ </div>
+</main>
+<script>
+const screen=document.getElementById('screen'),stage=document.getElementById('stage'),idle=document.getElementById('idle'),intro=document.getElementById('intro'),scan=document.getElementById('scan'),result=document.getElementById('result'),message=document.getElementById('message'),reset=document.getElementById('reset'),caption=document.getElementById('invitation-depth');
+const scanCurtain=document.getElementById('scan-curtain'),analysisUI=document.getElementById('analysis-ui'),phaseValue=document.getElementById('phase-value'),phaseNote=document.getElementById('phase-note'),elapsedValue=document.getElementById('elapsed-value'),progressValue=document.getElementById('progress-value'),progressBar=document.getElementById('progress-bar'),cleanlinessValue=document.getElementById('cleanliness-value');
+const videos=[idle,intro,scan,result];
+let state='idle',busy=false,pending=null;
+function setState(value){
+ scanCurtain.style.opacity='0';state=value;screen.dataset.state=value;screen.setAttribute('role',value==='idle'?'button':'region');screen.tabIndex=value==='idle'?0:-1;screen.setAttribute('aria-label',value==='idle'?'สอดมือเข้าไปดูสิ คลิกเพื่อเริ่มสแกน':value==='ended'?'สแกนเสร็จแล้ว':'กำลังแสดงผลการสแกน');
+}
+async function nextClip(video,value,previous){
+ if(busy)return;
+ busy=true;pending={video,value,previous};message.textContent='';video.currentTime=0;
+ let callback;
+ const ready=typeof video.requestVideoFrameCallback==='function'?new Promise(resolve=>{callback=video.requestVideoFrameCallback(resolve);}):new Promise(resolve=>video.addEventListener('timeupdate',resolve,{once:true}));
+ try{try{await video.play();}catch(error){video.muted=true;await video.play();}await ready;setState(value);previous.pause();pending=null;}
+ catch(error){if(callback!==undefined)video.cancelVideoFrameCallback(callback);message.textContent='แตะเพื่อเล่นต่อ';}
+ finally{busy=false;}
+}
+async function start(){
+ if(pending&&!busy){const {video,value,previous}=pending;nextClip(video,value,previous);return;}
+ if(state!=='idle'||busy)return;
+ setState('preparing');stage.classList.remove('loop-seam');
+ await new Promise(resolve=>setTimeout(resolve,380));
+ nextClip(intro,'intro',idle);
+}
+screen.addEventListener('click',start);
+screen.addEventListener('keydown',event=>{if(event.target===screen&&(event.key==='Enter'||event.key===' ')){event.preventDefault();start();}});
+intro.addEventListener('ended',()=>nextClip(scan,'scan',intro));
+scan.addEventListener('ended',()=>nextClip(result,'result',scan));
+result.addEventListener('ended',()=>setState('ended'));
+reset.addEventListener('click',async event=>{event.stopPropagation();pending=null;for(const video of videos){video.pause();video.currentTime=0;}setState('idle');caption.style.opacity=0;message.textContent='';await idle.play().catch(()=>{message.textContent='คลิกหน้าจอเพื่อเริ่ม';});screen.focus();});
+for(const video of videos)video.addEventListener('error',()=>{message.textContent='โหลดวิดีโอไม่สำเร็จ กรุณารีเฟรชหน้าเว็บ';});
+function updateAnalysis(){
+ const palm=state==='scan',back=state==='result'||state==='ended';
+ scanCurtain.style.opacity='0';
+ if(!palm&&!back){analysisUI.style.opacity='0';return;}
+ const t=palm?scan.currentTime:result.currentTime;
+ analysisUI.style.opacity=String(palm?Math.max(0,Math.min(1,(t-2.65)/.55)):1);
+ const complete=back&&t>=8,turning=back&&t>=.8&&t<3;
+ analysisUI.classList.toggle('complete',complete);
+ phaseValue.textContent=complete?'SCAN COMPLETE':turning?'TURN HANDS':palm||t<.8?'PALM ANALYSIS':'BACK ANALYSIS';
+ phaseNote.textContent=complete?'SCAN COMPLETE':turning?'ROTATE TO SCAN BACK':palm||t<.8?'PALM · SURFACE ANALYSIS':'BACK · SURFACE ANALYSIS';
+ const fraction=palm?Math.max(0,Math.min(1,(t-2.7)/6.3)):Math.max(0,Math.min(1,(t-3)/5));
+ const progress=Math.round(palm?50*fraction:50+50*fraction);
+ progressValue.textContent=progress+'%';progressBar.style.width=progress+'%';
+ cleanlinessValue.textContent=complete?'100%':'94%';
+ const elapsed=Math.floor(palm?t:10+t);
+ elapsedValue.textContent=String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0');
+}
+function updateMotion(){
+ updateAnalysis();
+ if(state==='idle'&&Number.isFinite(idle.duration))stage.classList.toggle('loop-seam',idle.currentTime>idle.duration-.42||idle.currentTime<.12);else stage.classList.remove('loop-seam');
+ if(state==='intro'){
+  const t=intro.currentTime,enter=Math.max(0,Math.min(1,(t-4.1)/.85)),leave=Math.max(0,Math.min(1,(7.65-t)/1.05));
+  caption.style.opacity=enter*leave;
+  caption.style.setProperty('--caption-scale',String(.9+Math.max(0,t-4.1)*.15));
+  caption.style.setProperty('--caption-blur',`${(1-enter)*3}px`);
+ }else caption.style.opacity=0;
+ requestAnimationFrame(updateMotion);
+}
+updateMotion();
+</script>
+</body>
+</html>
